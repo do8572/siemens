@@ -1,6 +1,6 @@
 # Matej Miočić's Data Science Project Competition journal
 
-## March 2020 (27h)
+## March 2022 (27h)
 * 4. (3h): Meeting. + Initial analysis of dataset. + Discussion/organization with team.
 * 5. (2h): Watched tutorials and read about recommender systems.
 * 11. (1h): Meeting + a little data exploration.
@@ -12,7 +12,7 @@
 * 31. (5h): Experimenting with implicit dataset and parameters for RankFM.
 
 
-## April 2020 (25h)
+## April 2022 (25h)
 * 8. (2h): Meeting + looking at other implementation of recommender systems.
 * 19. (2h): More data exploration.
 * 20. (5h): Expand RankFM to products and families.
@@ -21,11 +21,11 @@
 * 26. (4h): Meeting + cleaning up code, started writing interim report.
 * 27. (6h): Created a few plots, countinuing writing the interim report.
 
-## May 2020 ([total hours for May])
+## May 2022 ([total hours for May])
 
 ...
 
-## June 2020 ([total hours for June])
+## June 2022 ([total hours for June])
 
 ...
 
