@@ -30,7 +30,8 @@ def most_popular_variation_and_product_per_category(data):
 def baseline_most_popular(train, test, prediction):
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
-    
+    top_categories = train['family'].value_counts().index.tolist()
+
     predictions = 0
     correct_predictions = 0
     for cust in test['customer'].unique():
@@ -41,7 +42,7 @@ def baseline_most_popular(train, test, prediction):
             elif prediction == 'product':
                 items = popular_products[category]
             elif prediction == 'family':
-                items = categories[cust]
+                items = top_categories
             purchased_items = test[test['customer'] == cust][prediction].unique()
             for item in items[:5]:
                 if item in purchased_items:
@@ -55,6 +56,7 @@ def baseline_most_popular(train, test, prediction):
 def baseline_most_popular_new(train, test, prediction):
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
+    top_categories = train['family'].value_counts().index.tolist()
     
     predictions = 0
     correct_predictions = 0
@@ -66,7 +68,7 @@ def baseline_most_popular_new(train, test, prediction):
             elif prediction == 'product':
                 items = popular_products[category]
             elif prediction == 'family':
-                items = categories[cust]
+                items = top_categories
             purchased_items_test = test[test['customer'] == cust][prediction].unique()
             purchased_items_train = train[train['customer'] == cust][prediction].unique()
             j = 0
@@ -131,7 +133,7 @@ def sliding_window(data, train_size, test_size):
         test = data[(data['day'] > split) & (data['day'] <= end)]
 
         print('window ', start, split, end)
-        for prediction in ['variation', 'product', 'family']:
+        for prediction in ['variation', 'product','family']:
             ac = baseline_most_popular(train, test, prediction=prediction)
             popular[prediction].append(ac)
             print(f'popular {prediction}', ac)
