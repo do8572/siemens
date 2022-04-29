@@ -7,11 +7,11 @@
 * 3. (6h): Framework so that we don't have to reimplement common parts of our code multiple times. (Failure due to poor organization - on my part.) 
 * 4. (4h): Spotlight implementation of deepFM.
 
-## April 2022 (34h)
+## April 2022 (32h)
 
-* 1. (12h): Analizing FuxiCTR as alternative library for deepFM. (Spotlight lacks support for categorical features.)
+* 1. (10h): Analizing FuxiCTR as alternative library for deepFM. (Spotlight lacks support for categorical features.)
 * 2. (10h): Analizing & building model using tensorflow deepCTR. (Enables greater control over negative sampling than FuxiCTR.)
 * 3. (6h): Fixing Spotlight deepFM. (Due to some yet un-discovered bugs hit rate is 0.0 - TO BE FIXED.)
 * 4. (6h): Meetings + miscelenious (journal, report, etc.)
 
-## Total: 56h
+## Total: 54h
