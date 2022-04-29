@@ -19,19 +19,22 @@ def unique_products_per_customer(data):
     pl.tight_layout()
 
     ax = pl.subplot(gs[0, 0]) # row 0, col 0
-    pl.hist(variation.values(),bins=list(range(0,420,20)), color='blue', label='unique variations')
+    pl.hist(variation.values(),bins=list(range(1,420,20)), color='blue', label='unique variations')
     pl.xlabel('variations')
     pl.ylabel('customers')
+    pl.ylim(top=1700)
     ax.legend(bbox_to_anchor=(1.05, 1.15))
 
     ax = pl.subplot(gs[0, 1]) # row 0, col 1
-    pl.hist(product.values(),bins=list(range(0,210,10)), color='cornflowerblue', label='unique products')
+    pl.hist(product.values(),bins=list(range(1,210,10)), color='cornflowerblue', label='unique products')
     pl.xlabel('products')
+    pl.ylim(top=1700)
     ax.legend(bbox_to_anchor=(1.05, 1.15))
 
     ax = pl.subplot(gs[0, 2]) # row 1, span all columns
-    pl.hist(family.values(),bins=range(0,20,1), color='slateblue', label='unique family')
+    pl.hist(family.values(),bins=list(range(1,22,1)), color='slateblue', label='unique family')
     pl.xlabel('families')
+    pl.ylim(top=1700)
     ax.legend(bbox_to_anchor=(1, 1.15))
 
     plt.savefig('unique.png')
