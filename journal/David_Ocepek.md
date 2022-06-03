@@ -14,4 +14,19 @@
 * 3. (6h): Fixing Spotlight deepFM. (Due to some yet un-discovered bugs hit rate is 0.0 - TO BE FIXED.)
 * 4. (6h): Meetings + miscelenious (journal, report, etc.)
 
-## Total: 54h
+## May 2022 (25h)
+
+* 1. (18h): Implementing deepFM from scratch (implemntation also includes 1st and 2nd order FM - both for comparison with Matej's FM model as well as a check whether our methodologies match), since I wasn't able to find an implementation that meet all of our requirements
+* 2. (3h): Preparation of material for Siemens meeting.
+* 3. (4h): Meetings (include meeting's with teamates and Siemens)
+
+## June 2022 (15h)
+
+* 1. (6h): Tunning model hyperparamaters
+* 2. (2h): Meeting discusion of future work, discrepancy in methodology was found (I was predicting for customer - day pairs, while Matej was predicting for entire period of 4 months.) - FIX NEEDED: We decided Matej solution fit our problem better, so alterations needed.
+* 3. (4h): Adding top k hit rate evaluation, making sure CV works.
+* 4. (1.5h): Modifying program to predict for time period of 4 months.
+
+## Today: (min. 10h) fully add support for 4 months, get fractions, comment code, analyze feature importance using Shapley
+
+## Total: 94.5h
