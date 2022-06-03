@@ -22,7 +22,7 @@
 
 ## June 2022 (15h)
 
-* 1. (6h): Tunning model hyperparamaters
+* 1. (6h): Tunning model hyperparamaters, changing deepFM, 1st and 2nd order FM to return probabilities for True/False by adding final softmax layer.
 * 2. (2h): Meeting discusion of future work, discrepancy in methodology was found (I was predicting for customer - day pairs, while Matej was predicting for entire period of 4 months.) - FIX NEEDED: We decided Matej solution fit our problem better, so alterations needed.
 * 3. (4h): Adding top k hit rate evaluation, making sure CV works.
 * 4. (1.5h): Modifying program to predict for time period of 4 months.
