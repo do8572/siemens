@@ -20,13 +20,14 @@
 * 2. (3h): Preparation of material for Siemens meeting.
 * 3. (4h): Meetings (include meeting's with teamates and Siemens)
 
-## June 2022 (15h)
+## June 2022 (24h)
 
 * 1. (6h): Tunning model hyperparamaters, changing deepFM, 1st and 2nd order FM to return probabilities for True/False by adding final softmax layer.
 * 2. (2h): Meeting discusion of future work, discrepancy in methodology was found (I was predicting for customer - day pairs, while Matej was predicting for entire period of 4 months.) - FIX NEEDED: We decided Matej solution fit our problem better, so alterations needed.
 * 3. (4h): Adding top k hit rate evaluation, making sure CV works.
-* 4. (1.5h): Modifying program to predict for time period of 4 months.
+* 4. (3h): Modifying program to predict for time period of 4 months.
+* 5. (9h): Training on all negative samples and unifying methodologies.
 
 ## Today: (min. 10h) fully add support for 4 months, get fractions, comment code, analyze feature importance using Shapley
 
-## Total: 94.5h
+## Total: 103.5h
