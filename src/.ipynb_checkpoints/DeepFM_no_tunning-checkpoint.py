@@ -5,7 +5,7 @@
 
 # ## 0. Imports
 
-# In[44]:
+# In[1]:
 
 
 # Basic Data Analysis Tools
@@ -31,7 +31,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 
 # Hyperparameter tunning
-import talos
+# import talos
 
 # TODO: shapley for feature importance evaluation
 #import shap
@@ -39,7 +39,7 @@ import talos
 #tf.compat.v1.disable_v2_behavior()
 
 
-# In[45]:
+# In[33]:
 
 
 def transaction_preprocess(transactions, train_bounds, test_bounds, time_period = 125):
@@ -137,13 +137,13 @@ def transaction_preprocess(transactions, train_bounds, test_bounds, time_period 
     return transactions, train_rnd_sample.sample(frac=1).reset_index(drop=True), final_neg_sampl, products, customers
 
 
-# In[46]:
+# In[34]:
 
 
 transactions = pd.read_csv("dataset/transaction_history.csv") # load dataset
 transformations = [] # includes train, test folds for CV
 
-for i in range(6):
+for i in range(1):
     print(f"Iteration {i}", end="\r")
     transformed, train, test, products, customers = transaction_preprocess(transactions, (i*125, (i+4)*125), ((i+4)*125, (i+5)*125)) 
     print(test.drop_duplicates().label.sum())
@@ -151,7 +151,7 @@ for i in range(6):
 train, test = transformations[0]
 
 
-# In[47]:
+# In[35]:
 
 
 test.label.sum()
@@ -161,7 +161,7 @@ test.label.sum()
 
 # ### 1.1 Model parts
 
-# In[48]:
+# In[36]:
 
 
 def define_input_layers(df):
@@ -186,14 +186,14 @@ def define_input_layers(df):
 inputs = define_input_layers(transformed)
 
 
-# In[49]:
+# In[37]:
 
 
 def Tensor_Mean_Pooling(name = 'mean_pooling', keepdims = False):
     return Lambda(lambda x: K.mean(x, axis = 1, keepdims=keepdims), name = name)
 
 
-# In[50]:
+# In[38]:
 
 
 def fm_1d(inputs):
@@ -222,7 +222,7 @@ fm_model_1d = Model(inputs, y_1d)
 plot_model(fm_model_1d, show_shapes=True, show_layer_names=True)
 
 
-# In[51]:
+# In[39]:
 
 
 def fm_2d(inputs, k):
@@ -255,17 +255,15 @@ fm_model_2d = Model(inputs, y_2d)
 plot_model(fm_model_2d, show_shapes=True, show_layer_names=True)
 
 
-# In[52]:
+# In[54]:
 
 
-def dnn_part(embed_2d, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu"):
+def dnn_part(embed_2d, dnn_dim, dnn_dr, k_reg=(1e-3, 1e-3), a_reg=(1e-4, 1e-4), act_fun="relu"):
     # flat embed layers from 3D to 2D tensors
     y_dnn = Flatten(name = 'flat_embed_2d')(embed_2d)
     for h in dnn_dim:
         y_dnn = Dropout(dnn_dr)(y_dnn)
-        y_dnn = Dense(h, activation=act_fun,
-                      kernel_regularizer=regularizers.L1L2(l1=k_reg[0], l2=k_reg[1]),
-                      activity_regularizer=regularizers.L1L2(l1=a_reg[1], l2=a_reg[1]))(y_dnn)
+        y_dnn = Dense(h, activation=act_fun)(y_dnn)
     y_dnn = Dense(1, activation=act_fun, name = 'deep_output')(y_dnn)
     
     return y_dnn
@@ -275,7 +273,7 @@ fm_model_dnn = Model(inputs, y_dnn)
 plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 
-# In[53]:
+# In[41]:
 
 
 def lstm_part(embed_2d, lstm_dim, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu", lstm_fun="tanh"):
@@ -321,7 +319,7 @@ plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 # ### 1.2 Models
 
-# In[54]:
+# In[42]:
 
 
 def mf_model():
@@ -339,7 +337,7 @@ MF = mf_model()
 plot_model(MF, show_shapes=True, show_layer_names=True)
 
 
-# In[55]:
+# In[43]:
 
 
 FM_params = {
@@ -363,7 +361,7 @@ FM, _ = fm_model(**FM_params)
 plot_model(FM, show_shapes=True, show_layer_names=True)
 
 
-# In[56]:
+# In[44]:
 
 
 deepFM_params = {
@@ -372,7 +370,7 @@ deepFM_params = {
     'dnn_dr': 0.2
 }
 
-def deep_fm_model(k, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu"):
+def deep_fm_model(k, dnn_dim, dnn_dr, k_reg=(1e-1, 1e-1), a_reg=(1e-4, 1e-4), act_fun="relu"):
     
     inputs = define_input_layers(transformed)
     
@@ -391,7 +389,7 @@ deepFM = deep_fm_model(**deepFM_params)
 plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 
-# In[57]:
+# In[45]:
 
 
 def lstm_fm_model(k, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu", lstm_fun="tanh"):
@@ -415,7 +413,7 @@ plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 # ## 2. Training
 
-# In[58]:
+# In[46]:
 
 
 def df2xy(df, model):
@@ -424,7 +422,7 @@ def df2xy(df, model):
     return x,np.asarray(y).astype('float32')
 
 
-# In[59]:
+# In[49]:
 
 
 mf_model_arr = []
@@ -437,23 +435,23 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
     
     fm_model_1d.compile(loss = 'binary_crossentropy', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
-    model_ckp = ModelCheckpoint(filepath=f'./models/1d_{i}_tunning.h5', 
+    model_ckp = ModelCheckpoint(filepath=f'./models/1d_{i}.h5', 
                                         monitor='val_loss',
                                         save_weights_only=True, 
                                         save_best_only=True)
     callbacks = [early_stop, model_ckp]
     
-    if not exists(f'./models/1d_{i}_tunning.h5'):
+    if not exists(f'./models/1d_{i}.h5'):
         # Train on entire train set (using optimal hyperparameters)   
         train_history = fm_model_1d.fit(train_x, train_y, 
                                               epochs=300, batch_size=256, 
                                               validation_split=0.1, 
                                               callbacks = callbacks)
     mf_model_arr.append(fm_model_1d)
-fm_model_1d.load_weights(f"./models/1d_0_tunning.h5")
+fm_model_1d.load_weights(f"./models/1d_0.h5")
 
 
-# In[60]:
+# In[50]:
 
 
 fm_model_arr = []
@@ -465,21 +463,21 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
     train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
     fm_model_2d.compile(loss = 'binary_crossentropy', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
-    model_ckp = ModelCheckpoint(filepath=f'./models/2d_{i}_tunning.h5', 
+    model_ckp = ModelCheckpoint(filepath=f'./models/2d_{i}.h5', 
                                     monitor='val_loss',
                                     save_weights_only=True, 
                                     save_best_only=True)
     callbacks = [early_stop, model_ckp]
-    if not exists(f'./models/2d_{i}_tunning.h5'):
+    if not exists(f'./models/2d_{i}.h5'):
         train_history = fm_model_2d.fit(train_x, train_y,
                                               epochs=100, batch_size=256, 
                                               validation_split=0.1, 
                                               callbacks = callbacks)
     fm_model_arr.append(fm_model_1d)
-fm_model_2d.load_weights('./models/2d_0_tunning.h5')
+fm_model_2d.load_weights('./models/2d_0.h5')
 
 
-# In[61]:
+# In[51]:
 
 
 # DeepFM wrapper function
@@ -494,7 +492,7 @@ def run_deepfm(train_x, train_y, val_x, val_y, params):
     
     deepfm_model.compile(loss = 'binary_crossentropy', optimizer=keras.optimizers.Adam(lr=params["lr"]))
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
-    model_ckp = ModelCheckpoint(filepath=f'./models/1d_{i}_tunning.h5', 
+    model_ckp = ModelCheckpoint(filepath=f'./models/1d_{i}.h5', 
                                         monitor='val_loss',
                                         save_weights_only=True, 
                                         save_best_only=True)
@@ -510,73 +508,43 @@ def run_deepfm(train_x, train_y, val_x, val_y, params):
     return train_history, deepfm_model
 
 
-# In[62]:
+# In[56]:
 
 
 deepfm_model_arr = []
 
+deepFM_params = {
+    'k':20,
+    'dnn_dim':[64, 64],
+    'dnn_dr': 0.2
+}
+
 for i, transaction_tuple in zip(range(len(transformations)), transformations):
     train, test = transaction_tuple
-    print(np.max(train.day.unique()))
     deepfm_model = deep_fm_model(**deepFM_params)
     train_x, train_y = df2xy(train, deepfm_model)
     train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-    
-    deepfm_model.compile(loss = 'binary_crossentropy', optimizer=keras.optimizers.Adam(lr=0.1))
+    deepfm_model.compile(loss = 'binary_crossentropy', optimizer="adam")
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
-    model_ckp = ModelCheckpoint(filepath=f'./models/deepfm_{i}_tunning.h5', 
+    model_ckp = ModelCheckpoint(filepath=f'./models/deepfm_{i}.h5', 
                                     monitor='val_loss',
                                     save_weights_only=True, 
                                     save_best_only=True)
     callbacks = [early_stop, model_ckp]
-    if not exists(f'./models/deepfm_{i}_tunning.h5'):
-        if not exists(f'./params/deepfm_{i}.csv'):
-            # tune hyperparameters
-            p = {
-                "k": [15, 20, 25, 30],
-                'dnn_dim':[[64, 64]],
-                "lr": [1e-5, 1e-4, 5e-4, 1e-3],
-                "dropout": [0.1, 0.2, 0.3],
-                "l1": [0, 1e-4, 1e-3, 1e-2],
-                "l2": [0, 1e-4, 1e-3, 1e-2],
-                "activation_function": ["tanh", "relu", "sigmoid"]}
-            scan_object = talos.Scan(train_x, train_y, model=run_deepfm, params=p, experiment_name="DeepFM", multi_input=True,
-                         fraction_limit=.01)
-        
-            scan_object.data.to_csv(f'./params/deepfm_{i}.csv', index=False)
-        
-        scan_params = pd.read_csv(f'./params/deepfm_{i}.csv')
-        params = scan_params.sort_values("loss").head(1).apply(lambda x: literal_eval(x) if (type(x) == str) else x).to_dict('records')[0]
-        params["dnn_dim"] = literal_eval(params["dnn_dim"])
-        
-        # read hyperparameters
-        deepfm_model = deep_fm_model(k=params["k"], dnn_dim=params["dnn_dim"], dnn_dr=params["dropout"], 
-                                k_reg=(params["l1"], params["l2"]), a_reg=(params["l1"], params["l2"]), act_fun=params["activation_function"])
-        train_x, train_y = df2xy(train, deepfm_model)
-        train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-
-        deepfm_model.compile(loss = 'binary_crossentropy', optimizer=keras.optimizers.Adam(lr=params["lr"]))
-        
-        # train with optimal hyperparameters
+    if not exists(f'./models/deepfm_{i}.h5'):
         train_history = deepfm_model.fit(train_x, train_y, 
-                                              epochs=300, batch_size=256, 
+                                              epochs=500, batch_size=256, 
                                               validation_split=0.1, 
                                               callbacks = callbacks)
     deepfm_model_arr.append(deepfm_model)
-deepfm_model.load_weights(f'./models/deepfm_0_tunning.h5')
-
-
-# In[63]:
-
-
-scan_params.sort_values("loss")
+deepfm_model.load_weights(f'./models/deepfm_0.h5')
 
 
 # ## 3. Evaluation
 
 # ### 3.1 Score (for top k products)
 
-# In[41]:
+# In[57]:
 
 
 eval_models = [("1d", fm_model_1d), ("2d", fm_model_2d), ("deepfm", deepfm_model)]
@@ -587,7 +555,7 @@ for k in eval_k:
         for i, transaction_tuple in zip(range(len(transformations)), transformations):
             train, test = transaction_tuple
             model_name, model = model_tuple
-            model.load_weights(f'./models/{model_name}_{i}_tunning.h5')
+            model.load_weights(f'./models/{model_name}_{i}.h5')
             test_x, test_y = df2xy(test, model)
             test_y = pd.get_dummies(pd.Series(test_y)).to_numpy()
             pred_deepfm = test.copy()
@@ -600,19 +568,19 @@ for k in eval_k:
         print("------------------------------------------------------------------------------------------------")
 
 
-# In[20]:
+# In[21]:
 
 
 train_prod = set(train["prod"])
 
 
-# In[21]:
+# In[22]:
 
 
 pred_deepfm[["day", "customer", "prod", "label", "score"]].sort_values(['score'], ascending=[False]).groupby(["day", "customer"]).head(5).sort_values(["customer", "score"])
 
 
-# In[22]:
+# In[23]:
 
 
 for k in eval_k:
@@ -625,7 +593,7 @@ for k in eval_k:
 
 # ### 3.2 F1-Score (for values above threshold)
 
-# In[36]:
+# In[24]:
 
 
 eval_models = [("1d", fm_model_1d), ("2d", fm_model_2d), ("deepfm", deepfm_model)]
