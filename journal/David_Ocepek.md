@@ -27,7 +27,9 @@
 * 3. (4h): Adding top k hit rate evaluation, making sure CV works.
 * 4. (3h): Modifying program to predict for time period of 4 months.
 * 5. (9h): Training on all negative samples and unifying methodologies.
+* 7. (5h): Add LSTM DeepFM.
+* 8. (7h): Add hyperparameter optimization for all models.
+* 9. (5h): Graphing, plotting, changing results.
+* 10. (8h): Writing preliminray report.
 
-## Today: (min. 10h) fully add support for 4 months, get fractions, comment code, analyze feature importance using Shapley
-
-## Total: 103.5h
+## Total: 128.5h
