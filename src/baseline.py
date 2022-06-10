@@ -1,9 +1,9 @@
-from turtle import pu
 import pandas as pd
 import numpy as np
 import random
 
 def most_common_category_per_customer(data):
+    '''Returns most popular family for each customer.'''
     categories = {}
     for cust in data['customer'].unique():
         customer_purchases = data[data['customer'] == cust]
@@ -13,6 +13,8 @@ def most_common_category_per_customer(data):
     return categories
 
 def most_popular_variation_and_product_per_category(data):
+    '''Returns most popular variations and products per family.'''
+    
     popular_variations = {}
     popular_products = {}
     for fam in data['family'].unique():
@@ -28,6 +30,7 @@ def most_popular_variation_and_product_per_category(data):
     return popular_variations, popular_products
 
 def baseline_most_popular(train, test, prediction, top=5):
+    '''Predicts popular variations/products/families and returns the hit rate.'''
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
     top_categories = train['family'].value_counts().index.tolist()
@@ -54,6 +57,7 @@ def baseline_most_popular(train, test, prediction, top=5):
     return correct_predictions / predictions
 
 def baseline_most_popular_new(train, test, prediction, top=5):
+    '''Predicts popular new variations/products/families and returns the hit rate.'''
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
     top_categories = train['family'].value_counts().index.tolist()
@@ -91,6 +95,7 @@ def predict_random_item(items):
     return random.sample(items, k=5)
 
 def baseline_with_random_item(train, test):
+    '''Predicts random item for each customer and return the hit rate.'''
     all_items = list(train['variation'].unique())
     
     predictions = 0
@@ -106,6 +111,7 @@ def baseline_with_random_item(train, test):
     return correct_predictions / predictions
 
 def one_split(data, split):
+    '''Performs evaluation of the model with only one split of the data base'''
     print('ONE SPLIT')
     train = data[data['day'] <= split]
     test = data[data['day'] > split]
@@ -120,6 +126,8 @@ def one_split(data, split):
     print('random variations', accc)
 
 def sliding_window(data, train_size, test_size):
+    ''' Performs model evaluation with sliding window technique for
+    different values of k for hit@k. Returns mean value and standard deviation of all folds.'''
     print('SLIDING WINDOW')
     iterations = (1250 - train_size) // test_size
     
