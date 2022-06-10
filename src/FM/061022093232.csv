@@ -1,0 +1,2 @@
+round_epochs,loss,val_loss,k,dnn_dim,lr,dropout,l1,l2,activation_function
+140,0.05946910008788109,0.09194923937320709,50,[64, 64],0.0001,0.1,0.01,0,tanh
