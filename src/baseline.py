@@ -27,7 +27,7 @@ def most_popular_variation_and_product_per_category(data):
         popular_products[fam] = products
     return popular_variations, popular_products
 
-def baseline_most_popular(train, test, prediction):
+def baseline_most_popular(train, test, prediction, top=5):
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
     top_categories = train['family'].value_counts().index.tolist()
@@ -44,7 +44,7 @@ def baseline_most_popular(train, test, prediction):
             elif prediction == 'family':
                 items = top_categories
             purchased_items = test[test['customer'] == cust][prediction].unique()
-            for item in items[:5]:
+            for item in items[:top]:
                 if item in purchased_items:
                     correct_predictions += 1
                     break
@@ -53,7 +53,7 @@ def baseline_most_popular(train, test, prediction):
             pass
     return correct_predictions / predictions
 
-def baseline_most_popular_new(train, test, prediction):
+def baseline_most_popular_new(train, test, prediction, top=5):
     popular_variations, popular_products = most_popular_variation_and_product_per_category(train)
     categories = most_common_category_per_customer(train)
     top_categories = train['family'].value_counts().index.tolist()
@@ -73,7 +73,7 @@ def baseline_most_popular_new(train, test, prediction):
             purchased_items_train = train[train['customer'] == cust][prediction].unique()
             j = 0
             for item in items:
-                if j == 5:
+                if j == top:
                     break
                 if item in purchased_items_train:
                     continue
@@ -123,30 +123,32 @@ def sliding_window(data, train_size, test_size):
     print('SLIDING WINDOW')
     iterations = (1250 - train_size) // test_size
     
-    popular = {'variation':[], 'product':[], 'family':[]}
-    popular_new = {'variation':[], 'product':[], 'family':[]}
-    for i in range(iterations):
-        start = test_size * i
-        split = test_size * i + train_size
-        end = test_size * i + train_size + test_size
-        train = data[(data['day'] > start) & (data['day'] <= split)]
-        test = data[(data['day'] > split) & (data['day'] <= end)]
+    for top in [1,2,3,5,10,15,20,30]:
+        print(f'------------- top {top} items ----------------')
+        popular = {'variation':[], 'product':[], 'family':[]}
+        popular_new = {'variation':[], 'product':[], 'family':[]}
+        for i in range(iterations):
+            start = test_size * i
+            split = test_size * i + train_size
+            end = test_size * i + train_size + test_size
+            train = data[(data['day'] > start) & (data['day'] <= split)]
+            test = data[(data['day'] > split) & (data['day'] <= end)]
 
-        print('window ', start, split, end)
-        for prediction in ['variation', 'product','family']:
-            ac = baseline_most_popular(train, test, prediction=prediction)
-            popular[prediction].append(ac)
-            print(f'popular {prediction}', ac)
+            print('window ', start, split, end)
+            for prediction in ['variation', 'product','family']:
+                ac = baseline_most_popular(train, test, prediction=prediction, top=top)
+                popular[prediction].append(ac)
+                #print(f'popular {prediction}', ac)
 
-            acc = baseline_most_popular_new(train, test, prediction=prediction)
-            popular_new[prediction].append(acc)
-            print(f'popular new {prediction}', acc)
+                acc = baseline_most_popular_new(train, test, prediction=prediction, top=top)
+                popular_new[prediction].append(acc)
+                #print(f'popular new {prediction}', acc)
 
-    print('--------------------------------------')
-    print('mean values and standard deviation')
-    for prediction in ['variation', 'product', 'family']:
-        print(f'popular {prediction}', np.mean(popular[prediction]), np.std(popular[prediction]))
-        print(f'popular new {prediction}', np.mean(popular_new[prediction]), np.std(popular_new[prediction]))
+        print('--------------------------------------')
+        print(f'mean values and standard deviation for top {top} items')
+        for prediction in ['variation', 'product', 'family']:
+            print(f'popular {prediction}', np.mean(popular[prediction]), np.std(popular[prediction]))
+            print(f'popular new {prediction}', np.mean(popular_new[prediction]), np.std(popular_new[prediction]))
 
 if __name__ == '__main__':
     data = pd.read_csv('transaction_history.csv', sep=',', header=0)
