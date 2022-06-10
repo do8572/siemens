@@ -37,8 +37,8 @@ import talos
 
 # In[2]:
 
-for predict_only_new_products in [False, True]:
-    for prod_class in ["variation", "product", "family"]:
+for predict_only_new_products in [False]:
+    for prod_class in ["variation"]:
 
 
         # In[3]:
@@ -61,8 +61,8 @@ for predict_only_new_products in [False, True]:
             transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
             
             # FOR TESTING PURPOSES: I dont have much RAM :)
-            # transactions = transactions[(transactions["customer"] < 100)]
-            # transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
+            transactions = transactions[(transactions["customer"] < 200)]
+            transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
             
             transactions["day"] = transactions["day"] // time_period # map days to weeks, months, years
             if prod_class == "product":
@@ -157,7 +157,7 @@ for predict_only_new_products in [False, True]:
         # In[4]:
 
 
-        transactions = pd.read_csv("dataset/transaction_history.csv") # load dataset
+        transactions = pd.read_csv("transaction_history.csv") # load dataset
         transformations = [] # includes train, test folds for CV
 
         for i in range(6):
@@ -236,7 +236,7 @@ for predict_only_new_products in [False, True]:
 
         y_1d = fm_1d(inputs)
         fm_model_1d = Model(inputs, y_1d)
-        plot_model(fm_model_1d, show_shapes=True, show_layer_names=True)
+        #plot_model(fm_model_1d, show_shapes=True, show_layer_names=True)
 
 
         # In[9]:
@@ -269,7 +269,7 @@ for predict_only_new_products in [False, True]:
             
         y_2d, embed_2d = fm_2d(inputs, 100)
         fm_model_2d = Model(inputs, y_2d)
-        plot_model(fm_model_2d, show_shapes=True, show_layer_names=True)
+        #plot_model(fm_model_2d, show_shapes=True, show_layer_names=True)
 
 
         # In[10]:
@@ -289,7 +289,7 @@ for predict_only_new_products in [False, True]:
 
         y_dnn = dnn_part(embed_2d, [16, 16], 0.5)
         fm_model_dnn = Model(inputs, y_dnn)
-        plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
+        #plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 
         # In[11]:
@@ -333,7 +333,7 @@ for predict_only_new_products in [False, True]:
         y_dnn = lstm_part(embed_2d, [64], [64, 64], 0.5)
         fm_model_dnn = Model(inputs, y_dnn)
         print(fm_model_dnn.outputs)
-        plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
+        #plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 
         # ### 1.2 Models
@@ -353,7 +353,7 @@ for predict_only_new_products in [False, True]:
             return mf_model
 
         MF = mf_model()
-        plot_model(MF, show_shapes=True, show_layer_names=True)
+        #plot_model(MF, show_shapes=True, show_layer_names=True)
 
 
         # In[13]:
@@ -377,7 +377,7 @@ for predict_only_new_products in [False, True]:
             
             return FM_model, embed_2d
         FM, _ = fm_model(**FM_params)
-        plot_model(FM, show_shapes=True, show_layer_names=True)
+        #plot_model(FM, show_shapes=True, show_layer_names=True)
 
 
         # In[14]:
@@ -405,7 +405,7 @@ for predict_only_new_products in [False, True]:
             
             return deep_fm_model
         deepFM = deep_fm_model(**deepFM_params)
-        plot_model(deepFM, show_shapes=True, show_layer_names=True)
+        #plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 
         # In[23]:
@@ -427,7 +427,7 @@ for predict_only_new_products in [False, True]:
             
             return deep_fm_model
         deepFM = deep_fm_model(**deepFM_params)
-        plot_model(deepFM, show_shapes=True, show_layer_names=True)
+        #plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 
         # ## 2. Training
@@ -713,6 +713,7 @@ for predict_only_new_products in [False, True]:
                 scan_params = pd.read_csv(ptar)
                 params = scan_params.sort_values("loss").head(1).apply(lambda x: literal_eval(x) if (type(x) == str) else x).to_dict('records')[0]
                 params["dnn_dim"] = literal_eval(params["dnn_dim"])
+                params["lstm_dim"] = literal_eval(params["lstm_dim"])
                 
                 # read hyperparameters
                 lstmfm_model = lstm_fm_model(k=params["k"], lstm_dim=params["lstm_dim"], dnn_dim=params["dnn_dim"], dnn_dr=params["dropout"], 
