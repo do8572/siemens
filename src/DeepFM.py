@@ -5,7 +5,7 @@
 
 # ## 0. Imports
 
-# In[237]:
+# In[1]:
 
 
 # Basic Data Analysis Tools
@@ -39,7 +39,7 @@ import talos
 #tf.compat.v1.disable_v2_behavior()
 
 
-# In[238]:
+# In[2]:
 
 
 def transaction_preprocess(transactions, train_bounds, test_bounds, prod_class="variation", time_period = 125):
@@ -58,8 +58,11 @@ def transaction_preprocess(transactions, train_bounds, test_bounds, prod_class="
     # encode categorical variables
     transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
     
-    # FOR TESTING PURPOSES: I dont have much RAM :)
-    # transactions = transactions[(transactions["customer"] < 100)]
+    # FOR TESTING PURPOSES: use subsampled versions
+    # transactions = transactions[(transactions["customer"] < 200)]
+    # transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
+    # customer_sample = set(np.random.choice(transactions.customer.unique(), size=100, replace=False))
+    # transactions = transactions[transactions.customer.apply(lambda x: x in customer_sample)]
     # transactions["customer"] = transactions["customer"].astype('category').cat.codes + 1
     
     transactions["day"] = transactions["day"] // time_period # map days to weeks, months, years
@@ -127,7 +130,9 @@ def transaction_preprocess(transactions, train_bounds, test_bounds, prod_class="
     
     # Bootstrap negative sample train set (only samples from train set were used) - in case no bootstraping is desired change replace -> False
     # Removes potential outliers which have for example bought only one item or that are highly unlikely to buy an item
-    train_rnd_sample = np.array([np.random.choice(train_days, size=SAMPLE_SIZE),                                              np.random.choice(customers, size=SAMPLE_SIZE),                                              np.random.choice(products, size=SAMPLE_SIZE)]).T
+    train_rnd_sample = np.array([np.random.choice(train_days, size=SAMPLE_SIZE),\
+                                              np.random.choice(customers, size=SAMPLE_SIZE),\
+                                              np.random.choice(products, size=SAMPLE_SIZE)]).T
     
     # remove samples that were actually bought (are in hit_combo)
     not_faulty = [tuple(train_rnd_sample[row,:]) not in hit_combo for row in range(train_rnd_sample.shape[0])]
@@ -150,20 +155,20 @@ def transaction_preprocess(transactions, train_bounds, test_bounds, prod_class="
     return transactions, train_rnd_sample.sample(frac=1).reset_index(drop=True), final_neg_sampl, products, customers
 
 
-# In[239]:
+# In[3]:
 
 
 transactions = pd.read_csv("dataset/transaction_history.csv") # load dataset
 transformations = [] # includes train, test folds for CV
 for i in range(6):
     print(f"Iteration {i}", end="\r")
-    transformed, train, test, products, customers = transaction_preprocess(transactions, (i*125, (i+4)*125), ((i+4)*125, (i+5)*125), prod_class="variation") 
+    transformed, train, test, products, customers = transaction_preprocess(transactions, (i*125, (i+4)*125), ((i+4)*125, (i+5)*125), prod_class="product") 
     print(test.label.sum())
     transformations.append((train, test))
 train, test = transformations[0]
 
 
-# In[ ]:
+# In[4]:
 
 
 test = test.drop_duplicates().label.sum()
@@ -179,7 +184,7 @@ test = test.drop_duplicates().label.sum()
 
 # ### 1.1 Model parts
 
-# In[ ]:
+# In[5]:
 
 
 def define_input_layers(df):
@@ -204,14 +209,14 @@ def define_input_layers(df):
 inputs = define_input_layers(transformed)
 
 
-# In[ ]:
+# In[6]:
 
 
 def Tensor_Mean_Pooling(name = 'mean_pooling', keepdims = False):
     return Lambda(lambda x: K.mean(x, axis = 1, keepdims=keepdims), name = name)
 
 
-# In[ ]:
+# In[7]:
 
 
 def fm_1d(inputs):
@@ -240,7 +245,7 @@ fm_model_1d = Model(inputs, y_1d)
 plot_model(fm_model_1d, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[8]:
 
 
 def fm_2d(inputs, k):
@@ -273,7 +278,7 @@ fm_model_2d = Model(inputs, y_2d)
 plot_model(fm_model_2d, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[9]:
 
 
 def dnn_part(embed_2d, dnn_dim, dnn_dr):
@@ -291,7 +296,7 @@ fm_model_dnn = Model(inputs, y_dnn)
 plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[10]:
 
 
 def lstm_part(embed_2d, lstm_dim, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu", lstm_fun="tanh"):
@@ -301,7 +306,9 @@ def lstm_part(embed_2d, lstm_dim, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e
     # flatten and unflatten (needed for concetanation)
     y_dnn = Flatten(name = 'flatten')(embed_2d)
     y_dnn = Reshape(embed_2d.shape[1:], name = "unflatten")(y_dnn)
-
+    
+    print(a_reg[1])
+    print(a_reg)
     y_dnn = LSTM(lstm_dim[0], activation=lstm_fun, return_sequences=False, name="lstm_inputs",
                       kernel_regularizer=regularizers.L1L2(l1=k_reg[0], l2=k_reg[1]),
                       activity_regularizer=regularizers.L1L2(l1=a_reg[1], l2=a_reg[1]))(y_dnn) # Flatten(name = 'flat_embed_2d')(embed_2d)
@@ -337,7 +344,7 @@ plot_model(fm_model_dnn, show_shapes=True, show_layer_names=True)
 
 # ### 1.2 Models
 
-# In[ ]:
+# In[11]:
 
 
 def mf_model():
@@ -347,7 +354,7 @@ def mf_model():
     # combinded deep and fm parts
     y = Concatenate()([y_fm_1d])
     y = Dense(2, name = "concat")(y)
-    y = Softmax(name = 'deepfm_output')(y)
+    # y = Softmax(name = 'deepfm_output')(y)
     mf_model = Model(inputs, y)
     return mf_model
 
@@ -355,7 +362,7 @@ MF = mf_model()
 plot_model(MF, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[12]:
 
 
 FM_params = {
@@ -371,7 +378,7 @@ def fm_model(k):
     # combinded deep and fm parts
     y = Concatenate()([y_fm_1d, y_fm_2d])
     y = Dense(2, name = "concat")(y)
-    y = Softmax(name = 'fm_output')(y)
+    # y = Softmax(name = 'fm_output')(y)
     FM_model = Model(inputs, y)
     
     return FM_model, embed_2d
@@ -379,7 +386,7 @@ FM, _ = fm_model(**FM_params)
 plot_model(FM, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[27]:
 
 
 deepFM_params = {
@@ -398,8 +405,8 @@ def deep_fm_model(k, dnn_dim, dnn_dr):
     
     # combinded deep and fm parts
     y = Concatenate()([y_fm_1d, y_fm_2d, y_dnn])
-    y = Dense(2, name = "concat")(y)
-    y = Softmax(name = 'deepfm_output')(y)
+    # y = Dense(2, name = "concat")(y)
+    # y = Softmax(name = 'deepfm_output')(y)
     deep_fm_model = Model(inputs, y)
     
     return deep_fm_model
@@ -407,16 +414,16 @@ deepFM = deep_fm_model(**deepFM_params)
 plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 
-# In[ ]:
+# In[14]:
 
 
-def lstm_fm_model(k, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu", lstm_fun="tanh"):
+def lstm_fm_model(k, lstm_dim, dnn_dim, dnn_dr, k_reg=(1e-4, 1e-4), a_reg=(1e-4, 1e-4), act_fun="relu", lstm_fun="tanh"):
     
     inputs = define_input_layers(transformed)
     
     y_fm_1d = fm_1d(inputs)
     y_fm_2d, embed_2d = fm_2d(inputs, k)
-    y_dnn = lstm_part(embed_2d, dnn_dim, dnn_dr, k_reg, a_reg, act_fun, lstm_fun)
+    y_dnn = lstm_part(embed_2d, lstm_dim=lstm_dim, dnn_dim=dnn_dim, dnn_dr=dnn_dr, k_reg=k_reg, a_reg=a_reg, act_fun=act_fun, lstm_fun=lstm_fun)
     
     # combinded deep and fm parts
     y = Concatenate()([y_fm_1d, y_fm_2d, y_dnn])
@@ -431,7 +438,7 @@ plot_model(deepFM, show_shapes=True, show_layer_names=True)
 
 # ## 2. Training
 
-# In[ ]:
+# In[15]:
 
 
 def df2xy(df, model):
@@ -440,9 +447,10 @@ def df2xy(df, model):
     return x,np.asarray(y).astype('float32')
 
 
-# In[ ]:
+# In[16]:
 
 
+"""
 mf_model_arr = []
 
 for i, transaction_tuple in zip(range(len(transformations)), transformations):
@@ -450,7 +458,7 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
     fm_model_1d = mf_model()
     train_x, train_y = df2xy(train, fm_model_1d)
     train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-    fm_model_1d.compile(loss = 'binary_crossentropy', optimizer='adam')
+    fm_model_1d.compile(loss = 'mse', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
     model_ckp = ModelCheckpoint(filepath=f'./models/1d_{i}.h5', 
                                     monitor='val_loss',
@@ -466,19 +474,21 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
         
     mf_model_arr.append(fm_model_1d)
 fm_model_1d.load_weights(f"./models/1d_0.h5")
+"""
 
 
-# In[ ]:
+# In[17]:
 
 
+"""
 fm_model_arr = []
 
 for i, transaction_tuple in zip(range(len(transformations)), transformations):
     train, test = transaction_tuple
     fm_model_2d, _ = fm_model(**FM_params)
     train_x, train_y = df2xy(train, fm_model_2d)
-    train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-    fm_model_2d.compile(loss = 'binary_crossentropy', optimizer='adam')
+    # train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
+    fm_model_2d.compile(loss = 'mse', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
     model_ckp = ModelCheckpoint(filepath=f'./models/2d_{i}.h5', 
                                     monitor='val_loss',
@@ -493,9 +503,10 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
                                               verbose=False)
     fm_model_arr.append(fm_model_1d)
 fm_model_2d.load_weights('./models/2d_0.h5')
+"""
 
 
-# In[ ]:
+# In[30]:
 
 
 deepfm_model_arr = []
@@ -504,8 +515,8 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
     train, test = transaction_tuple
     deepfm_model = deep_fm_model(**deepFM_params)
     train_x, train_y = df2xy(train, deepfm_model)
-    train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-    deepfm_model.compile(loss = 'binary_crossentropy', optimizer='adam')
+    # train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
+    deepfm_model.compile(loss = 'mse', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
     model_ckp = ModelCheckpoint(filepath=f'./models/deepfm_{i}.h5', 
                                     monitor='val_loss',
@@ -522,17 +533,24 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
 deepfm_model.load_weights(f'./models/deepfm_0.h5')
 
 
-# In[ ]:
+# In[19]:
 
 
+"""
 lstmfm_model_arr = []
+lstmFM_params = {
+    'k':100,
+    'lstm_dim': [64],
+    'dnn_dim':[64, 64],
+    'dnn_dr': 0.3
+}
 
 for i, transaction_tuple in zip(range(len(transformations)), transformations):
     train, test = transaction_tuple
-    lstmfm_model = lstm_fm_model(**deepFM_params)
+    lstmfm_model = lstm_fm_model(**lstmFM_params)
     train_x, train_y = df2xy(train, deepfm_model)
     train_y = pd.get_dummies(pd.Series(train_y)).to_numpy()
-    deepfm_model.compile(loss = 'binary_crossentropy', optimizer='adam')
+    lstmfm_model.compile(loss = 'binary_crossentropy', optimizer='adam')
     early_stop = EarlyStopping(monitor='val_loss', patience=10)
     model_ckp = ModelCheckpoint(filepath=f'./models/lstmfm_{i}.h5', 
                                     monitor='val_loss',
@@ -540,23 +558,24 @@ for i, transaction_tuple in zip(range(len(transformations)), transformations):
                                     save_best_only=True)
     callbacks = [early_stop, model_ckp]
     if not exists(f'./models/lstmfm_{i}.h5'):
-        train_history = deepfm_model.fit(train_x, train_y, 
+        train_history = lstmfm_model.fit(train_x, train_y, 
                                               epochs=100, batch_size=2048, 
                                               validation_split=0.1, 
                                               callbacks = callbacks,
                                               verbose=False)
     lstmfm_model_arr.append(deepfm_model)
 lstmfm_model.load_weights(f'./models/lstmfm_0.h5')
+"""
 
 
 # ## 3. Evaluation
 
 # ### 3.1 Score (for top k products)
 
-# In[ ]:
+# In[31]:
 
 
-eval_models = [("1d", fm_model_1d), ("2d", fm_model_2d), ("deepfm", deepfm_model)]
+eval_models = [("deepfm", deepfm_model)]
 eval_k = [1, 2, 3, 5, 10, 15, 20, 30]
 hit_eval = {eval_name: {k: {"hit_rate": []} for k in eval_k} for eval_name, eval_model in eval_models}
 for k in eval_k:
@@ -567,7 +586,7 @@ for k in eval_k:
             model_name, model = model_tuple
             model.load_weights(f'./models/{model_name}_{i}.h5')
             test_x, test_y = df2xy(test, model)
-            test_y = pd.get_dummies(pd.Series(test_y)).to_numpy()
+            # test_y = pd.get_dummies(pd.Series(test_y)).to_numpy()
             pred_deepfm = test.copy()
             pred_deepfm["score"] = model.predict(test_x,
                                         batch_size=2048)[:, 1]
@@ -579,7 +598,7 @@ for k in eval_k:
         print("------------------------------------------------------------------------------------------------")
 
 
-# In[ ]:
+# In[21]:
 
 
 res = pd.DataFrame(columns=["k", "hit", "std"])
@@ -596,10 +615,10 @@ for k in eval_k:
 res.to_csv("./results/dummy_hit.csv", index=False)
 
 
-# In[236]:
+# In[22]:
 
 
-eval_models = [("1d", fm_model_1d), ("2d", fm_model_2d), ("deepfm", deepfm_model)]
+eval_models = [("deepfm", deepfm_model)]
 eval_k = [1, 2, 3, 5, 10, 15, 20, 30]
 hit_eval = {eval_name: {k: {"hit_rate": []} for k in eval_k} for eval_name, eval_model in eval_models}
 for k in eval_k:
@@ -637,19 +656,97 @@ for k in eval_k:
 res.to_csv("./results/dummy_hit_variations_new.csv", index=False)
 
 
-# In[190]:
+# ### 3.2 F1-Score
+
+# In[25]:
 
 
-test
+eval_models = [("deepfm", deepfm_model)]
+eval_k = [10, 20, 30]
+hit_eval = {eval_name: {k: {"hit_rate": []} for k in eval_k} for eval_name, eval_model in eval_models}
+thresholds = [0.1 * i for i in range(10)]
+f1_res = pd.DataFrame(columns=["k", "threshold", "f1"])
+
+for k in eval_k:
+    for model_tuple in eval_models:
+        for i, transaction_tuple in zip(range(len(transformations)), transformations):
+            train, test = transaction_tuple
+            model_name, model = model_tuple
+            model.load_weights(f'./models/{model_name}_{i}.h5')
+            test_x, test_y = df2xy(test, model)
+            # test_y = pd.get_dummies(pd.Series(test_y)).to_numpy()
+            pred_model = test.copy()
+            pred_model["score"] = model.predict(test_x,
+                                        batch_size=256)[:, 1]
+            eval_model = pred_model.sort_values(['score'], ascending=[False]).groupby(["day", "customer"]).head(k)
+            # threshold
+            for t in thresholds:
+                eval_model["above_thresh"] = eval_model.score > t # mark those above and bellow threshold (POSITIVE)
+                eval_model["TP"] = eval_model["above_thresh"] & (eval_model.label == 1)
+                eval_model["FN"] = ~eval_model["above_thresh"] & (eval_model.label == 1)
+                TP = np.array(eval_model[["day", "customer", "TP"]].groupby(["day", "customer"]).sum().reset_index()["TP"]).sum()
+                FN = np.array(eval_model[["day", "customer", "FN"]].groupby(["day", "customer"]).sum().reset_index()["FN"]).sum()
+                P = np.array(eval_model[["day", "customer", "above_thresh"]].groupby(["day", "customer"]).sum().reset_index()["above_thresh"]).sum()
+                not_sure_what = len(eval_model[(eval_model.label == 1)]["prod"].unique()) # len(test[(test.label == 1)]["prod"].unique())
+                #print(TP)
+                #print(P)
+                #print(FN)
+                precision = TP / P
+                # recall = TP / (TP + FN)
+                recall = TP / test[test.label == 1][["customer", "prod"]].groupby("customer").nunique()["prod"].sum()
+                #print(test[test.label == 1][["customer", "prod"]].groupby("customer").nunique()["prod"].mean())
+                #print(FN)
+                #recall = TP / not_sure_what
+                #print(f"Precision: {precision}")
+                #print(f"Recall: {recall}")
+                #print(f"F1-score: {2 * (precision * recall) / (precision + recall)}")
+                f1_res = f1_res.append({
+                    "k": k,
+                    "algorithm": model_name,
+                    "threshold": t,
+                    "f1": 2 * (precision * recall) / (precision + recall)
+                }, ignore_index=True)
+                # calculate recall
+                # ana = eval_deepfm[["day", "customer", "label"]].groupby(["day", "customer"]).max().reset_index()
+                # print(f"Hit@{k} F1-score {model_name} (CV-{i}, threshold: {t}): {ana.label.mean()}")
+        print("------------------------------------------------------------------------------------------------")
 
 
-# In[186]:
+# In[33]:
 
 
-train[["customer", "prod"]].to_dict("r")
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(1, 1)
+my_k = [10]
+f1_plt = f1_res.groupby(["algorithm", "threshold"]).mean().reset_index()
+for k in my_k:
+    for i, model_tuple in zip(range(len(eval_models)), eval_models):
+        model_name, model = model_tuple
+        bol = (f1_plt.algorithm == model_name)
+        ax.plot(f1_plt[bol]["threshold"], f1_plt[bol]["f1"], label=f"{model_name}")
+        ax.legend()
+        # ax[0].axis('square')
+        ax.set_ylim(0.1, 0.6)
+        ax.set_xlim(0.1, 0.9)
+        ax.set_xlabel("threshold")
+        ax.set_ylabel("F1 score")
+        ax.grid()
+plt.show()
 
 
-# In[136]:
+# In[ ]:
+
+
+transformed
+
+
+# In[ ]:
+
+
+f1_plt
+
+
+# In[ ]:
 
 
 for k in [10, 20, 30]:
@@ -671,29 +768,6 @@ for k in [10, 20, 30]:
 
 
 
-
-
-# In[137]:
-
-
-# 1. Predictions for Matrix Factorization
-test_x, test_y = df2xy(test, fm_model_1d)
-
-pred_1d = test.copy()
-pred_1d["score"] = fm_model_1d.predict(test_x,
-                            batch_size=2048).flatten()
-
-# 2. Predictions for Factorization Machines
-test_x, test_y = df2xy(test, fm_model_2d)
-pred_2d = test.copy()
-pred_2d["score"] = fm_model_2d.predict(test_x,
-                            batch_size=2048).flatten()
-
-# 3. Predictions for DeepFM
-test_x, test_y = df2xy(test, deepfm_model)
-pred_deepfm = test.copy()
-pred_deepfm["score"] = deepfm_model.predict(test_x,
-                            batch_size=2048).flatten()
 
 
 # In[ ]:
@@ -729,20 +803,6 @@ for k in [10, 20, 30]:
     ana = eval_deepfm[["day", "customer", "label"]].groupby(["day", "customer"]).max().reset_index()
     print(f"Hit@{k} score deepFM: {ana.label.mean()}")
     print("------------------------------------------------------------------------------------------------")
-
-
-# ## 3. Feature importance
-
-# In[38]:
-
-
-# TODO: feature importance for model in shapley
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:
