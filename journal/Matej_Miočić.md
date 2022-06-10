@@ -21,12 +21,26 @@
 * 26. (4h): Meeting + cleaning up code, started writing interim report.
 * 27. (6h): Created a few plots, countinuing writing the interim report.
 
-## May 2022 ([total hours for May])
-
+## May 2022 (27h)
+12. (4h) Preparation for presentation
+13. (3h) Siemens meeting and presentation, additional data exploration
+14. (2h) Get results for different k
+20. (5h) Start of implementation for thresholding
+21. (5h) Bug fixes
+22. (2h) Try different parameters for threshold
+26. (4h) Implement F1-score
 ...
 
-## June 2022 ([total hours for June])
-
+## June 2022 (42h)
+* 1. (2h) Reading about RankFM
+* 2. (3h) Meeting, reading article
+* 3. (3h) Meeting and hyperparameter search start
+* 4. (4h) Hyperparameter tunning
+* 5. (3h) Implementing code for final results
+* 7. (4h) Writing report 
+* 8. (6h) Creating plots for final report
+* 9. (7h) Writing report, getting final results
+* 10. (10h) Final report, last changes
 ...
 
-## Total: [total sum of hours]
+## Total: [121]
