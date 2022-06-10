@@ -1,2 +1,0 @@
-round_epochs,loss,val_loss,lr,first_neuron,batch_size,epochs,dropout,loss,last_activation,weight_regulizer
-54,0.6399628520011902,0.7311630845069885,6.04,32,4,200,0.24,categorical_crossentropy,softmax,None
