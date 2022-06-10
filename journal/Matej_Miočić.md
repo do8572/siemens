@@ -43,4 +43,4 @@
 * 10. (10h) Final report, last changes
 ...
 
-## Total: [total sum of hours]
+## Total: [121]
