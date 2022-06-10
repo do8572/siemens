@@ -17,11 +17,21 @@
 * 28. (1): Midterm report.
 * 29. (8): Baseline model for product and family prediction, midterm report
 
+## May 2022 (35h)
+* 8. (8): Paper review for additional models (GLocalK, FFM, ...)
+* 9. (4): Presentation preparation for Siemens
+* 13. (3): Meeting and presentation for Siemens
+* 21. (10): FFM (library setup - xlearn, papers review, implementation)
+* 24. (5): FFM (implementation, data input shape)
+* 26. (5): FFM binary classification, looking into OCFFM but no implementation found
 
-## May 2022 (0h)
+## June 2020 (33h)
+* 1. (4): Negative sampling for FFM
+* 2. (6): Meeting and FFM
+* 3. (1): Meeting
+* 5. (4): FFM parameters setting
+* 7. (10): baseline for different hit rates, final report
+* 9. (3): Final report
+* 10. (5): Final report
 
-
-## June 2020 (0h)
-
-
-## Total: 46
+## Total: 114

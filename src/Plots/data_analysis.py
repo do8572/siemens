@@ -17,6 +17,7 @@ def unique_products_per_customer(data):
 
     pl.figure(figsize=(8, 4))
     pl.tight_layout()
+    pl.style.use('seaborn-darkgrid')
 
     ax = pl.subplot(gs[0, 0]) # row 0, col 0
     pl.hist(variation.values(),bins=list(range(1,420,20)), color='blue', label='unique variations')
